@@ -8,7 +8,16 @@ class MessageRemover {
     HTTPBuilder http
 
     MessageRemover() {
+        this(null)
+    }
+
+    MessageRemover(String token) {
         http = new HTTPBuilder(BASE)
+
+        if (token) {
+            println("Using token provided from cmd")
+            this.token = token
+        }
     }
 
     List<Im> getIms() {
@@ -168,7 +177,15 @@ class MessageRemover {
     }
 
     static void main(String[] args) {
-        MessageRemover messageRemover = new MessageRemover()
+        MessageRemover messageRemover
+
+        if (args.length > 0) {
+            messageRemover = new MessageRemover(args[0])
+
+        } else {
+            messageRemover = new MessageRemover()
+        }
+
         println("Please wait...")
         List<Im> ims = messageRemover.ims
 
