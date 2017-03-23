@@ -1,4 +1,5 @@
 import groovyx.net.http.HTTPBuilder
+import groovyx.net.http.HttpResponseException
 
 class MessageRemover {
     // TODO Drop your Slack API token into here for this all the work
@@ -142,11 +143,26 @@ class MessageRemover {
                         res.messages.each {
                             if (it.user != im.user) {
                                 // I.e. me, not the other user, since I can only delete my own messages
-                                def deleteAttempt = http.get(path: "/api/chat.delete", query: [channel: im.id, ts: it.ts, as_user: true, token: token])
+
+                                def deleteAttempt = null
+
+                                try {
+                                    deleteAttempt = http.get(path: "/api/chat.delete", query: [channel: im.id, ts: it.ts, as_user: true, token: token])
+
+                                } catch (HttpResponseException e) {
+
+                                    if (e.response.status == 429) {
+                                        println("Slack is upset with us. Waiting for a few seconds.")
+                                        Thread.sleep(4000)
+                                        deleteAttempt = http.get(path: "/api/chat.delete", query: [channel: im.id, ts: it.ts, as_user: true, token: token])
+                                    }
+                                }
+
                                 println(deleteAttempt)
                             }
                         }
                     } catch (Exception e) {
+
                         throw new Exception("Message delete failed: ${e.message}")
                     }
 
